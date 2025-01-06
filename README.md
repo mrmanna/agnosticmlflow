@@ -1,8 +1,13 @@
-# Project Name: Apache Flink with Apache Beam on Minikube
+# Agnostic ML Pipelines for Multi-Cloud: Apache Flink with Apache Beam on Minikube with MinIO
 
+### **NOTE**
+- This is a educational project for learning purposes only. It is not intended for production use.
+--- 
+#### Author: [Mahmudur R Manna](https://mrmanna.medium.com)
+---
 ## Overview
 
-This project sets up and deploys **Apache Flink** with **Apache Beam** on **Minikube** for scalable data processing pipelines. It provides a fully containerized and Kubernetes-based infrastructure designed for development, testing, and prototyping workflows.
+This project sets up and deploys **Apache Flink** with **Apache Beam** on **Minikube** with **MinIO** for scalable data processing pipelines. It provides a fully containerized and Kubernetes-based infrastructure designed for development, testing, and prototyping ML workflows.
 
 ### **Core Components**
 
@@ -12,6 +17,8 @@ This project sets up and deploys **Apache Flink** with **Apache Beam** on **Mini
 4. **Beam Job Server** - Accepts Apache Beam jobs and submits them to Flink for execution.
 5. **Data Ingestion App** - Submits jobs to the Beam Job Server for processing data.
 6. **MinIO DataLake** - Provides object storage for raw and processed data.
+  
+![alt](documentation/Components.png)
 
 ### **Component Interaction**
 
@@ -20,11 +27,7 @@ This project sets up and deploys **Apache Flink** with **Apache Beam** on **Mini
 - The **Flink JobManager** coordinates distributed execution with **Flink TaskManagers**.
 - The **Data Ingestion App** interacts with **MinIO** for raw data storage.
 - The **Flink TaskManagers** interact with **MinIO** for storing processed data.
-
-
-
 ---
-
 ## **Prerequisites**
 
 ### **Tools Required**
@@ -321,5 +324,6 @@ kubectl describe node
 
 This project sets up a scalable data pipeline using Kubernetes, Flink, and Beam, providing an environment for developing distributed data processing workflows. It is ideal for prototyping and integrating with cloud-native platforms for production deployment.
 
-For further enhancements, consider integrating monitoring tools like **Prometheus** and **Grafana** or extending workflows for multi-cloud deployments.
+For further enhancements, we consider integrating monitoring tools like **Prometheus** and **Grafana** or extending workflows for multi-cloud deployments. 
 
+![alt](documentation/multicloud%20scenario.png)
