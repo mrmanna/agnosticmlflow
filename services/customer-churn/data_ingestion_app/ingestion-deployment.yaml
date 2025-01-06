@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-ingestion-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: data-ingestion-app
+  template:
+    metadata:
+      labels:
+        app: data-ingestion-app
+    spec:
+      containers:
+      - name: data-ingestion-app
+        image: data-ingestion-app:latest
+        imagePullPolicy: IfNotPresent
+        envFrom:
+        - configMapRef:
+            name: minio-config
+        # livenessProbe:
+        #   httpGet:
+        #     path: /
+        #     port: 8080
+        #   initialDelaySeconds: 5
+        #   periodSeconds: 10
+        # readinessProbe:
+        #   httpGet:
+        #     path: /
+        #     port: 8080
+        #   initialDelaySeconds: 5
+        #   periodSeconds: 10

@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: beam-job-server
+  labels:
+    app: beam-job-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: beam-job-server
+  template:
+    metadata:
+      labels:
+        app: beam-job-server
+    spec:
+      containers:
+        - name: beam-job-server
+          image: apache/beam_flink1.13_job_server:latest
+          ports:
+            - containerPort: 8099
+              name: jobservice
+            - containerPort: 8098
+              name: artifact
+          args:
+            - "--flink-master-url=flink-jobmanager:8081"
+            - "--job-port=8099"
+            - "--artifact-port=8098"
+            # For advanced harness configs, see:
+            # https://beam.apache.org/documentation/runtime/sdk-harness-config/
+          volumeMounts:
+            - name: beam-artifact-volume
+              mountPath: /opt/beam/artifacts
+      volumes:
+        - name: beam-artifact-volume
+          emptyDir: {}

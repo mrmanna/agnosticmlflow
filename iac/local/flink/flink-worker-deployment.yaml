@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: flink-taskmanager
+spec:
+  replicas: 3
+  serviceName: flink-taskmanager
+  selector:
+    matchLabels:
+      app: flink-taskmanager # has to match .spec.template.metadata.labels
+  template:
+    metadata:
+      labels:
+        app: flink-taskmanager # has to match .spec.selector.matchLabels
+    spec:
+      hostname: flink-taskmanager
+      volumes:
+      - name: flink-config-volume
+        configMap:
+          name: flink-config
+          items:
+          - key: flink-conf.yaml
+            path: flink-conf.yaml
+          - key: log4j-console.properties
+            path: log4j-console.properties
+      - name: flink-data
+        persistentVolumeClaim:
+          claimName: flink-data-pvc
+      - name: flink-tmp-data
+        persistentVolumeClaim:
+          claimName: flink-tmp-data-pvc
+      - name: docker-sock
+        hostPath:
+          path: /var/run/docker.sock      
+      containers:
+      - name: flink-taskmanager
+        image: flink:1.13.0-with-docker
+        args: ["taskmanager"] 
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 6122
+          name: rpc
+        - containerPort: 6125
+          name: query-state
+        - containerPort: 9250
+        livenessProbe:
+          tcpSocket:
+            port: 6122
+          initialDelaySeconds: 30
+          periodSeconds: 60
+        volumeMounts:
+        - name: flink-config-volume
+          mountPath: /opt/flink/conf/
+        - name: flink-data
+          mountPath: /opt/flink-data/data
+          subPath: data
+        - mountPath: /tmp
+          name: flink-tmp-data
+          subPath: tmp
+        - mountPath: /var/run/docker.sock
+          name: docker-sock
+        securityContext:
+          privileged: true  # Enable privileged mode
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1"
+          limits:
+            memory: "4Gi"
+            cpu: "2"

@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: minio-ingress
+  namespace: default # Replace with your namespace if different
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false" # Disable HTTPS redirect for simplicity (use true for production with certs)
+    nginx.ingress.kubernetes.io/proxy-body-size: 50m  # Adjust request size if needed
+spec:
+  rules:
+  - host: minio.local     # Replace with your desired hostname (add to /etc/hosts for local testing)
+    http:
+      paths:
+      - path: /            # Route root path to MinIO API
+        pathType: Prefix
+        backend:
+          service:
+            name: minio
+            port:
+              number: 9001

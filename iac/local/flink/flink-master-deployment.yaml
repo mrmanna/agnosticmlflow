@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flink-jobmanager
+  labels:
+    app: flink
+    component: flink-jobmanager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flink
+      component: flink-jobmanager
+  template:
+    metadata:
+      labels:
+        app: flink
+        component: flink-jobmanager
+    spec:
+      hostname: flink-jobmanager
+      containers:
+        - name: flink-jobmanager
+          image: flink:1.13.0-with-docker
+          args: ["jobmanager"]        
+          ports:
+            - containerPort: 6123
+              name: rpc
+            - containerPort: 6124
+              name: blob-server
+            - containerPort: 8081
+              name: webui
+          livenessProbe:
+            tcpSocket:
+              port: 6123
+            initialDelaySeconds: 30
+            periodSeconds: 60
+          volumeMounts:
+            - name: flink-config-volume
+              mountPath: /opt/flink/conf
+            - mountPath: /var/run/docker.sock
+              name: docker-sock
+          securityContext:
+              privileged: true  # Enable privileged mode
+      volumes:
+        - name: flink-config-volume
+          configMap:
+            name: flink-config
+            items:
+              - key: flink-conf.yaml
+                path: flink-conf.yaml
+              - key: log4j-console.properties
+                path: log4j-console.properties 
+        - name: docker-sock
+          hostPath:
+            path: /var/run/docker.sock

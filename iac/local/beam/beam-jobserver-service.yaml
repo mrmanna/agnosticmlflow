@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: beam-job-server
+spec:
+  ports:
+    - port: 8099
+      targetPort: 8099
+      name: job-service
+    - port: 8098
+      targetPort: 8098
+      name: artifacts
+  selector:
+    app: beam-job-server
+

@@ -1,0 +1,16 @@
+
+[tool.poetry]
+name = "data-ingestion-app"
+version = "0.1.0"
+description = "Data ingestion app for loading sales data into MinIO"
+authors = ["Your Name <you@example.com>"]
+package-mode = false
+[tool.poetry.dependencies]
+python = "^3.9"
+pandas = "^2.0.3"
+minio = "^7.1.15"
+apache-beam = "^2.61.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

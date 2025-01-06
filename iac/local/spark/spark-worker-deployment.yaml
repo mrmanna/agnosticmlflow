@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spark-worker
+  labels:
+    app: spark
+    role: worker
+spec:
+  # Adjust replicas if you want more workers
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spark
+      role: worker
+  template:
+    metadata:
+      labels:
+        app: spark
+        role: worker
+    spec:
+      containers:
+        - name: spark-worker
+          image: spark-standalone:3.5.4
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/bash", "-c"]
+          args:
+            - /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077 --webui-port 8081
+          ports:
+            - containerPort: 8081  # Spark Worker UI
+          env:
+            - name: SPARK_MASTER_URL
+              value: spark://spark-master:7077

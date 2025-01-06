@@ -1,0 +1,86 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: flink-config
+data:
+  flink-conf.yaml: |+
+    jobmanager.rpc.address: flink-jobmanager
+    blob.server.port: 6124
+    jobmanager.rpc.port: 6123
+    taskmanager.rpc.port: 6122
+    queryable-state.proxy.ports: 6125
+
+    # TaskManager Slots
+    taskmanager.numberOfTaskSlots: 2
+
+    # Parallelism
+    parallelism.default: 23
+
+    # Memory Configuration
+    jobmanager.memory.process.size: 1024m         # 1GB for JobManager
+    taskmanager.memory.process.size: 4092m       # 2GB for TaskManager total memory
+    taskmanager.memory.network.fraction: 0.1     # 10% allocated to network buffers
+    taskmanager.memory.network.min: 64mb         # Minimum network buffer size
+    taskmanager.memory.network.max: 256mb        # Maximum network buffer size
+    taskmanager.memory.managed.size: 512mb       # 512MB for managed memory (explicitly set)
+
+    # JVM Overhead Configuration
+    taskmanager.memory.jvm-overhead.min: 256mb   # Minimum JVM overhead
+    taskmanager.memory.jvm-overhead.max: 512mb   # Maximum JVM overhead
+
+    # Off-Heap Memory Configuration
+    taskmanager.memory.framework.off-heap.size: 128mb  # Off-heap memory for frameworks
+    taskmanager.memory.task.off-heap.size: 128mb       # Task-specific off-heap memory
+    # Heartbeat settings
+    heartbeat.timeout: 300000
+    heartbeat.interval: 100000
+
+    # Restart strategy
+    restart-strategy: fixed-delay
+    restart-strategy.fixed-delay.attempts: 3
+    restart-strategy.fixed-delay.delay: 10s
+  log4j-console.properties: |+
+    # This affects logging for both user code and Flink
+    rootLogger.level = INFO
+    rootLogger.appenderRef.console.ref = ConsoleAppender
+    rootLogger.appenderRef.rolling.ref = RollingFileAppender
+
+    # Uncomment this if you want to _only_ change Flink's logging
+    #logger.flink.name = org.apache.flink
+    #logger.flink.level = INFO
+
+    # The following lines keep the log level of common libraries/connectors on
+    # log level INFO. The root logger does not override this. You have to manually
+    # change the log levels here.
+    logger.akka.name = akka
+    logger.akka.level = INFO
+    logger.kafka.name= org.apache.kafka
+    logger.kafka.level = INFO
+    logger.hadoop.name = org.apache.hadoop
+    logger.hadoop.level = INFO
+    logger.zookeeper.name = org.apache.zookeeper
+    logger.zookeeper.level = INFO
+
+    # Log all infos to the console
+    appender.console.name = ConsoleAppender
+    appender.console.type = CONSOLE
+    appender.console.layout.type = PatternLayout
+    appender.console.layout.pattern = %d{yyyy-MM-dd HH:mm:ss,SSS} %-5p %-60c %x - %m%n
+
+    # Log all infos in the given rolling file
+    appender.rolling.name = RollingFileAppender
+    appender.rolling.type = RollingFile
+    appender.rolling.append = false
+    appender.rolling.fileName = ${sys:log.file}
+    appender.rolling.filePattern = ${sys:log.file}.%i
+    appender.rolling.layout.type = PatternLayout
+    appender.rolling.layout.pattern = %d{yyyy-MM-dd HH:mm:ss,SSS} %-5p %-60c %x - %m%n
+    appender.rolling.policies.type = Policies
+    appender.rolling.policies.size.type = SizeBasedTriggeringPolicy
+    appender.rolling.policies.size.size=100MB
+    appender.rolling.strategy.type = DefaultRolloverStrategy
+    appender.rolling.strategy.max = 10
+
+    # Suppress the irrelevant (wrong) warnings from the Netty channel handler
+    logger.netty.name = org.apache.flink.shaded.akka.org.jboss.netty.channel.DefaultChannelPipeline
+    logger.netty.level = OFF    
