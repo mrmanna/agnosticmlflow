@@ -11,18 +11,27 @@ data:
     queryable-state.proxy.ports: 6125
 
     # TaskManager Slots
-    taskmanager.numberOfTaskSlots: 2
+    taskmanager.numberOfTaskSlots: 4
 
     # Parallelism
     parallelism.default: 23
+    taskmanager.memory.network.fraction: 0.2
+    taskmanager.memory.network.max: 2gb
+    taskmanager.memory.managed.size: 1gb
 
     # Memory Configuration
-    jobmanager.memory.process.size: 1024m         # 1GB for JobManager
+    jobmanager.memory.process.size: 2304m
+    jobmanager.memory.flink.size: 1792m       # 1536m (heap) + 256m (off-heap)
+    jobmanager.memory.heap.size: 1536m
+    jobmanager.memory.off-heap.size: 256m
+    jobmanager.memory.jvm-metaspace.size: 256m
+    jobmanager.memory.jvm-overhead.min: 128m
+    jobmanager.memory.jvm-overhead.max: 256m
     taskmanager.memory.process.size: 4092m       # 2GB for TaskManager total memory
-    taskmanager.memory.network.fraction: 0.1     # 10% allocated to network buffers
+    taskmanager.memory.network.fraction: 0.2    # 10% allocated to network buffers
     taskmanager.memory.network.min: 64mb         # Minimum network buffer size
     taskmanager.memory.network.max: 256mb        # Maximum network buffer size
-    taskmanager.memory.managed.size: 512mb       # 512MB for managed memory (explicitly set)
+    taskmanager.memory.managed.size: 1g      # 512MB for managed memory (explicitly set)
 
     # JVM Overhead Configuration
     taskmanager.memory.jvm-overhead.min: 256mb   # Minimum JVM overhead
@@ -32,13 +41,21 @@ data:
     taskmanager.memory.framework.off-heap.size: 128mb  # Off-heap memory for frameworks
     taskmanager.memory.task.off-heap.size: 128mb       # Task-specific off-heap memory
     # Heartbeat settings
-    heartbeat.timeout: 300000
-    heartbeat.interval: 100000
+    heartbeat.timeout: 600000
+    heartbeat.interval: 200000
 
     # Restart strategy
     restart-strategy: fixed-delay
-    restart-strategy.fixed-delay.attempts: 3
-    restart-strategy.fixed-delay.delay: 10s
+    restart-strategy.fixed-delay.attempts: 5
+    restart-strategy.fixed-delay.delay: 60s
+      # MinIO (S3) Configuration
+    fs.s3a.endpoint: http://minio.default.svc.cluster.local:9000
+    fs.s3a.access-key: minioadmin
+    fs.s3a.secret-key: minioadmin
+    fs.s3a.path.style.access: true
+    # Savepoints and Checkpoints Configuration
+    state.savepoints.dir: s3a://flink-savepoints/
+    state.checkpoints.dir: s3a://flink-checkpoints/    
   log4j-console.properties: |+
     # This affects logging for both user code and Flink
     rootLogger.level = INFO

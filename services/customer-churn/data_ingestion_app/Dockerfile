@@ -16,10 +16,10 @@ WORKDIR /app
 
 # CMD ["poetry", "run", "python", "src/main.py"]
 # Install dependencies before copying code to leverage Docker cache
-COPY requirements.txt .
+COPY requirements-docker.txt .
 
 # Install dependencies from requirements.txt
-RUN pip install -r requirements.txt
+RUN pip install -r requirements-docker.txt
 
 ARG CACHEBUST=1
 # Copy application code after installing dependencies

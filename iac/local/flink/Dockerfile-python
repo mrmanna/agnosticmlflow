@@ -1,0 +1,62 @@
+# -----------------------------------------------------------------------------------
+# 1. Stage: Beam Base (copy from the official Beam SDK)
+# -----------------------------------------------------------------------------------
+    FROM apache/beam_python3.9_sdk:2.60.0 AS beam_base
+    # ^ Adjust python version or Beam version if needed (e.g., python3.7_sdk, 2.60.0, etc.)
+    
+    # -----------------------------------------------------------------------------------
+    # 2. Final Image: AdoptOpenJDK + Flink + Copied Beam SDK
+    # -----------------------------------------------------------------------------------
+    FROM adoptopenjdk:11-jre-hotspot
+    
+    # Switch to root so we can install packages
+    USER root
+    
+    # Install essential tools
+    RUN apt-get update && apt-get install -y \
+        bash \
+        curl \
+        wget \
+        tar \
+        # If you still need them:
+        build-essential \
+        g++ \
+        libc-dev \
+        libffi-dev \
+        libssl-dev \
+        python3 \
+        python3-pip && rm -rf /var/lib/apt/lists/*
+    
+    # Copy Beam Python harness files from the official SDK image
+    COPY --from=beam_base /opt/apache/beam /opt/apache/beam
+    
+
+    # Install Apache Beam Python SDK
+    RUN pip3 install apache-beam==2.60.0
+    
+    # Set Java environment variables (if needed by Flink)
+    ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk
+    ENV PATH=$JAVA_HOME/bin:$PATH
+    
+    # Install Apache Flink
+    ENV FLINK_VERSION=1.18.1
+    ENV SCALA_VERSION=2.12
+    ENV FLINK_HOME=/opt/flink
+    
+    RUN wget https://archive.apache.org/dist/flink/flink-${FLINK_VERSION}/flink-${FLINK_VERSION}-bin-scala_${SCALA_VERSION}.tgz \
+        && tar -xzf flink-${FLINK_VERSION}-bin-scala_${SCALA_VERSION}.tgz -C /opt \
+        && rm flink-${FLINK_VERSION}-bin-scala_${SCALA_VERSION}.tgz \
+        && ln -s /opt/flink-${FLINK_VERSION} ${FLINK_HOME}
+    
+    ENV PATH=${FLINK_HOME}/bin:$PATH
+    
+    # Copy custom entrypoint script (if you have one)
+    COPY entrypoint.sh /entrypoint.sh
+    RUN chmod +x /entrypoint.sh
+    
+    # Expose Flink ports (adjust as needed)
+    EXPOSE 6121 6122 6125 8081
+    
+    # Launch with your custom entrypoint
+    ENTRYPOINT ["/entrypoint.sh"]
+    

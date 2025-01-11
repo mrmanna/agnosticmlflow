@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: beam-job-server
-          image: apache/beam_flink1.13_job_server:latest
+          image: apache/beam_flink1.18_job_server:latest
           ports:
             - containerPort: 8099
               name: jobservice
@@ -29,8 +29,19 @@ spec:
             # For advanced harness configs, see:
             # https://beam.apache.org/documentation/runtime/sdk-harness-config/
           volumeMounts:
-            - name: beam-artifact-volume
-              mountPath: /opt/beam/artifacts
+            - name: flink-config-volume
+              mountPath: /opt/flink/conf
+            - name: flink-staging
+              mountPath: /tmp/beam-artifact-staging
       volumes:
-        - name: beam-artifact-volume
-          emptyDir: {}
+        - name: flink-config-volume
+          configMap:
+            name: flink-config
+            items:
+              - key: flink-conf.yaml
+                path: flink-conf.yaml
+              - key: log4j-console.properties
+                path: log4j-console.properties 
+        - name: flink-staging
+          persistentVolumeClaim:
+            claimName: staging-artifacts-claim

@@ -1,19 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: flink-taskmanager
-  labels:
-    app: flink
-    component: flink-taskmanager
+  name: beam-python-sidecar
 spec:
-  clusterIP: None
   selector:
-    app: flink
+    app: flink-taskmanager
     component: flink-taskmanager
   ports:
-    - name: data1
-      port: 6121
-      targetPort: 6121
-    - name: rpc
-      port: 6122
-      targetPort: 6122
+    - protocol: TCP
+      port: 50000
+      targetPort: 50000
+      name: pool

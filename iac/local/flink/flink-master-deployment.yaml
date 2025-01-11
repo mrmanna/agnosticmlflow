@@ -20,7 +20,8 @@ spec:
       hostname: flink-jobmanager
       containers:
         - name: flink-jobmanager
-          image: flink:1.13.0-with-docker
+  #       image: flink:1.13.0-with-docker  # 
+          image: flink:1.18.1-with-python 
           args: ["jobmanager"]        
           ports:
             - containerPort: 6123
@@ -37,10 +38,17 @@ spec:
           volumeMounts:
             - name: flink-config-volume
               mountPath: /opt/flink/conf
-            - mountPath: /var/run/docker.sock
-              name: docker-sock
+            - name: flink-staging
+              mountPath: /tmp/beam-artifact-staging
           securityContext:
-              privileged: true  # Enable privileged mode
+              privileged: true  # Enable privileged mode - change other user as you prefer
+          resources:
+            requests:
+              memory: "4Gi"
+              cpu: "2"
+            limits:
+              memory: "4Gi"
+              cpu: "4"
       volumes:
         - name: flink-config-volume
           configMap:
@@ -50,6 +58,6 @@ spec:
                 path: flink-conf.yaml
               - key: log4j-console.properties
                 path: log4j-console.properties 
-        - name: docker-sock
-          hostPath:
-            path: /var/run/docker.sock
+        - name: flink-staging
+          persistentVolumeClaim:
+            claimName: staging-artifacts-claim

@@ -3,17 +3,24 @@ kind: StatefulSet
 metadata:
   name: flink-taskmanager
 spec:
-  replicas: 3
+  replicas: 6
   serviceName: flink-taskmanager
   selector:
     matchLabels:
-      app: flink-taskmanager # has to match .spec.template.metadata.labels
+      app: flink-taskmanager # Match labels between selector and template
   template:
     metadata:
       labels:
-        app: flink-taskmanager # has to match .spec.selector.matchLabels
+        app: flink-taskmanager
     spec:
       hostname: flink-taskmanager
+      # initContainers:
+      #   - name: init-staging
+      #     image: busybox
+      #     command: ['sh', '-c', 'mkdir -p /tmp/staged && chmod 777 /tmp/staged']
+      #     volumeMounts:
+      #     - name: flink-staging
+      #       mountPath: /tmp
       volumes:
       - name: flink-config-volume
         configMap:
@@ -23,19 +30,13 @@ spec:
             path: flink-conf.yaml
           - key: log4j-console.properties
             path: log4j-console.properties
-      - name: flink-data
+      - name: flink-staging
         persistentVolumeClaim:
-          claimName: flink-data-pvc
-      - name: flink-tmp-data
-        persistentVolumeClaim:
-          claimName: flink-tmp-data-pvc
-      - name: docker-sock
-        hostPath:
-          path: /var/run/docker.sock      
+          claimName: staging-artifacts-claim
       containers:
       - name: flink-taskmanager
-        image: flink:1.13.0-with-docker
-        args: ["taskmanager"] 
+        image: flink:1.18.1-with-python
+        args: ["taskmanager"]
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 6122
@@ -43,28 +44,43 @@ spec:
         - containerPort: 6125
           name: query-state
         - containerPort: 9250
+          name: metrics
+        - containerPort: 50000
+          name: pool          
         livenessProbe:
           tcpSocket:
             port: 6122
           initialDelaySeconds: 30
           periodSeconds: 60
         volumeMounts:
-        - name: flink-config-volume
-          mountPath: /opt/flink/conf/
-        - name: flink-data
-          mountPath: /opt/flink-data/data
-          subPath: data
-        - mountPath: /tmp
-          name: flink-tmp-data
-          subPath: tmp
-        - mountPath: /var/run/docker.sock
-          name: docker-sock
+          - name: flink-config-volume
+            mountPath: /opt/flink/conf
+          - name: flink-staging
+            mountPath: /tmp/beam-artifact-staging
         securityContext:
-          privileged: true  # Enable privileged mode
+          privileged: true
         resources:
           requests:
             memory: "2Gi"
             cpu: "1"
           limits:
-            memory: "4Gi"
+            memory: "2Gi"
+            cpu: "2"
+      - name: beam-python-sidecar
+        image: apache/beam_python3.9_sdk:2.60.0
+        args: ["--worker_pool"]
+        ports:
+          - containerPort: 50000
+            name: beam-port
+        volumeMounts:
+          - name: flink-config-volume
+            mountPath: /opt/flink/conf
+          - name: flink-staging
+            mountPath: /tmp/beam-artifact-staging
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1"
+          limits:
+            memory: "2Gi"
             cpu: "2"
